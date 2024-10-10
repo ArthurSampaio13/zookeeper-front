@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     descriptionElement.value = '';
                     authorElement.value = '';
                     releaseYearElement.value = '';
+                    loadBooks(); // Atualiza a lista de livros após adicionar
                 })
                 .catch(error => {
                     console.error('Houve um problema com a requisição:', error);
@@ -52,65 +53,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para visualizar livros
     const viewBooksModal = document.getElementById('viewBooksModal');
     viewBooksModal.addEventListener('show.bs.modal', function() {
-        const tbody = viewBooksModal.querySelector('tbody');
-        tbody.innerHTML = ''; // Limpa a tabela antes de adicionar novos dados
-
-        fetch('http://localhost:8081/v1/books/') // Ajuste a URL conforme necessário
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(books => {
-                books.forEach(book => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${book.id}</td>
-                        <td>${book.znode}</td>
-                        <td>${book.title}</td>
-                        <td>${book.genre}</td>
-                        <td>${book.description}</td>
-                        <td>${book.author}</td>
-                        <td>${book.releaseYear}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteBook('${book.id}')">Excluir</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error('Houve um problema com a requisição:', error);
-            });
+        loadBooks(); // Carrega os livros ao abrir a modal
     });
 
     // Função para excluir livro
     window.deleteBook = function(bookId) {
-        // Confirmar a exclusão
         if (confirm('Você tem certeza que deseja excluir este livro?')) {
             fetch(`http://localhost:8081/v1/books/${bookId}`, {
                 method: 'DELETE'
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Erro ao excluir o livro: ' + response.statusText);
+                    throw new Error('Network response was not ok ' + response.statusText);
                 }
-                return response.text();
-            })
-            .then(data => {
                 alert('Livro excluído com sucesso!');
-                // Atualizar a tabela de livros
-                loadBooks(); // Chame a função que atualiza a lista de livros
+                loadBooks(); // Atualiza a lista de livros após exclusão
             })
             .catch(error => {
                 console.error('Houve um problema com a requisição:', error);
-                alert('Erro ao excluir o livro. Verifique o console para mais detalhes.');
             });
         }
     };
 
-    // Função para carregar os livros
     function loadBooks() {
         fetch('http://localhost:8081/v1/books') // Supondo que você tenha essa rota para obter os livros
             .then(response => response.json())
@@ -128,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${book.author}</td>
                         <td>${book.releaseYear}</td>
                         <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteBook('${book.id}')">Excluir</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteBook(${book.id})">Excluir</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -139,6 +103,5 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Chame loadBooks() no momento apropriado para carregar os livros inicialmente
-    document.addEventListener('DOMContentLoaded', loadBooks);
+    loadBooks();
 });
